@@ -1,5 +1,74 @@
 
-We aim to develop a web application that focuses on group habit tracking. The competition should be between teams in the app, not within each. If one person doesn't finish the work on that day, then the entire group will lose points. However, as every team member finishes their work, the entire group will gain points. The person who didn't do the work will get a penalty that links losing points to "locking" of favourite apps for a certain amount of time that depends on the points lost. As points are gained, the team will level up and/or go up in the leaderboard. There will be two streaks: Group Streak and Individual Streak. Features for Streak: (1) 21 day Individual streak - You will get a “Skip Day” (a day you can take break without penalty or losing group/individual points and bonus points. (2) 21-day Group Streak - you will collectively go up two levels in the leaderboard. Leaderboard resets every week. There are also two kinds of points: Group Points and Individual Points. (1) Group points help in going up or down in leaderboard (2) Individual points buy "skip day".  We will use the "Vote to Bench" feature: If a member is inactive for 3 days, the team can vote to "Bench" them. A benched member doesn't contribute points (and doesn't cost the team points/penalties), but they lose all access to team rewards until they complete a "Redemption Task" (e.g., solving a Hard LeetCode problem in three days which the ai assigns).  There will be notifications as soon as half of people in the team finish the work; then, the person who doesn't finish will receive this notification. For the demo, we want to link the app to LeetCode and focus on LeetCode coding. We are using LeetCode for our demo. If a person spends more time or solves more problems on LeetCode, they will receive individual points. These individual points can be used to buy skip days (enabling them to skip one day), and if they fail to complete code on that day so, their most frequently used app will be blocked as a penalty for not doing so. These group points will be used on LinkedIn profiles, along with their personal resumes, to demonstrate how well they can work with a team.we are going to start from the scratch in a hackathon with 6 hrs time . so give me the prompts step by step to create it. we are planning to use firebase for our backend.
+# 🚀 SquadLock – Group Habit Tracker
+
+⚡ Built during a Hackathon
+🎯 Focus: Team accountability + habit consistency
+
+---
+
+## 🧠 Problem
+
+Most habit tracking apps focus on individuals and lack accountability.
+Users lose motivation and quit easily.
+
+---
+
+## 💡 Solution
+
+SquadLock introduces **group-based habit tracking**:
+
+* Teams compete instead of individuals
+* If one member fails → whole team loses points
+* Strong peer pressure = better consistency
+
+---
+
+## 🔥 Key Features
+
+* 👥 Team-based habit tracking
+* 🔥 Individual & Group streaks
+* 🏆 Reward + penalty system
+* 🚫 App blocking as punishment
+* 📊 Leaderboard system
+* 🗳️ "Vote to Bench" inactive members
+
+---
+
+## 🛠 Tech Stack
+
+* Frontend: React (Vite)
+* Backend: Firebase
+* Database: Firestore
+* Auth: Firebase Authentication
+
+---
+
+## ▶️ How to Run
+
+1. Clone the repo
+2. Go to frontend folder
+   cd frontend
+3. Install dependencies
+   npm install
+4. Add Firebase config in `.env`
+5. Run the app
+   npm run dev
+
+---
+
+## 🎥 Demo Video
+
+(Add your Google Drive / YouTube link here)
+
+
+---
+
+## 🚀 Future Scope
+
+* AI habit suggestions
+* Smart penalty system
+* Advanced analytics
+
 
 
 Viewing App in AI Studio: https://ai.studio/apps/59b21c1a-7176-4e6c-9644-ca34458a0f6e
