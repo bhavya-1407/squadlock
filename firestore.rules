@@ -1,0 +1,152 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - name: string (required)
+    //   - leetcodeUser: string (required)
+    //   - teamId: string (optional)
+    //   - individualPoints: number (required)
+    //   - individualStreak: number (required)
+    //   - isCompletedToday: bool (required)
+    //   - isBenched: bool (required)
+    //
+    // Collection: teams
+    // Document ID: {teamId}
+    // Fields:
+    //   - teamName: string (required)
+    //   - groupPoints: number (required)
+    //   - groupStreak: number (required)
+    //   - membersArray: list (required)
+    //   - leaderboardRank: number (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email == "sreejareddy110308@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isRecent(time) {
+      return time is int && time <= request.time.toMillis() + 5000 && time >= request.time.toMillis() - 60000;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'leetcodeUser', 'individualPoints', 'individualStreak', 'isCompletedToday', 'isBenched', 'poisonApps', 'favoriteApp', 'hasSkipDay', 'lastActive']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.leetcodeUser is string && data.leetcodeUser.size() < 50 &&
+             data.individualPoints is int &&
+             data.individualStreak is int &&
+             data.isCompletedToday is bool &&
+             data.isBenched is bool &&
+             data.poisonApps is list &&
+             (data.favoriteApp == null || data.favoriteApp is string) &&
+             data.hasSkipDay is bool &&
+             data.lastActive is int &&
+             (!('teamId' in data) || data.teamId == null || data.teamId is string) &&
+             (!('role' in data) || data.role is string);
+    }
+
+    function isValidVote(data) {
+      return data.keys().hasAll(['voterUid', 'targetUid', 'timestamp']) &&
+             data.voterUid == request.auth.uid &&
+             data.targetUid is string &&
+             data.timestamp is int;
+    }
+
+    function isValidTeam(data) {
+      return data.keys().hasAll(['teamName', 'groupPoints', 'groupStreak', 'membersArray']) &&
+             data.teamName is string && data.teamName.size() > 0 && data.teamName.size() < 100 &&
+             data.groupPoints is int &&
+             data.groupStreak is int &&
+             data.membersArray is list && data.membersArray.size() <= 20;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin() || 
+                    (isAuthenticated() && 
+                     resource != null &&
+                     resource.data.teamId != null &&
+                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                     resource.data.teamId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.teamId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (
+        (isOwner(userId) && (
+          isValidUser(request.resource.data) || 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActive']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteApp', 'lastActive']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isCompletedToday', 'individualPoints', 'individualStreak', 'lastActive']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamId', 'lastActive']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isBenched', 'lastActive']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['individualPoints', 'hasSkipDay', 'lastActive']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['individualPoints', 'lastActive'])
+        )) || 
+        isAdmin() ||
+        (
+          resource != null &&
+          resource.data.teamId != null &&
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          resource.data.teamId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.teamId &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isBenched']) &&
+          request.resource.data.isBenched == true
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /teams/{teamId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidTeam(request.resource.data);
+      allow update: if isAuthenticated() && (
+        (request.auth.uid in resource.data.membersArray) || 
+        // Allow joining if the user is adding themselves to the array
+        (
+          request.resource.data.membersArray.size() == resource.data.membersArray.size() + 1 &&
+          request.resource.data.membersArray.hasAll(resource.data.membersArray) &&
+          request.auth.uid in request.resource.data.membersArray &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['membersArray'])
+        ) ||
+        isAdmin()
+      ) && (
+        isValidTeam(request.resource.data) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['groupPoints']) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['membersArray'])
+      );
+      allow delete: if isAdmin();
+
+      match /votes/{voteId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isValidVote(request.resource.data) && voteId == request.auth.uid + "_" + request.resource.data.targetUid;
+        allow update: if isAuthenticated() && isValidVote(request.resource.data) && voteId == request.auth.uid + "_" + request.resource.data.targetUid;
+        allow delete: if isAuthenticated();
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+      }
+    }
+  }
+}

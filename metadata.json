@@ -1,0 +1,5 @@
+{
+  "name": "SquadLock",
+  "description": "A collaborative LeetCode tracking app where teams lock in their streaks and compete on points.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A SquadLock user tracking their LeetCode progress.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Display name from Google Login" },
+        "leetcodeUser": { "type": "string", "description": "LeetCode username" },
+        "teamId": { "type": "string", "description": "ID of the team the user belongs to" },
+        "individualPoints": { "type": "integer", "description": "Total points earned by the user" },
+        "individualStreak": { "type": "integer", "description": "Current daily streak" },
+        "isCompletedToday": { "type": "boolean", "description": "Whether the user finished today's challenge" },
+        "isBenched": { "type": "boolean", "description": "Whether the user is currently benched from the team" },
+        "poisonApps": { "type": "array", "items": { "type": "string" }, "description": "List of distraction apps" },
+        "favoriteApp": { "type": "string", "description": "The primary app to be locked" },
+        "hasSkipDay": { "type": "boolean", "description": "Whether the user has a skip day available" },
+        "assignedProblemSlug": { "type": "string", "description": "The slug of the problem assigned to the user for today" },
+        "lastActive": { "type": "integer", "description": "Last active timestamp" }
+      },
+      "required": ["name", "leetcodeUser", "individualPoints", "individualStreak", "isCompletedToday", "isBenched", "poisonApps", "favoriteApp", "hasSkipDay", "lastActive"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "A group of users competing together.",
+      "type": "object",
+      "properties": {
+        "teamName": { "type": "string", "description": "Name of the team" },
+        "groupPoints": { "type": "integer", "description": "Total points earned by the team" },
+        "groupStreak": { "type": "integer", "description": "Current team streak" },
+        "currentProgress": { "type": "integer", "description": "Number of members who completed today's challenge" },
+        "membersArray": { "type": "array", "items": { "type": "string" }, "description": "List of member UIDs" },
+        "lastBonusDate": { "type": "string", "description": "The last date a team bonus was awarded (YYYY-MM-DD)" },
+        "leaderboardRank": { "type": "integer", "description": "Current rank on the global leaderboard" }
+      },
+      "required": ["teamName", "groupPoints", "groupStreak", "currentProgress", "membersArray"]
+    },
+    "Vote": {
+      "title": "Vote",
+      "description": "A vote to bench a member.",
+      "type": "object",
+      "properties": {
+        "voterUid": { "type": "string" },
+        "targetUid": { "type": "string" },
+        "timestamp": { "type": "integer" }
+      },
+      "required": ["voterUid", "targetUid", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile and stats"
+    },
+    "/teams/{teamId}": {
+      "schema": "Team",
+      "description": "Team details and members"
+    },
+    "/teams/{teamId}/votes/{voteId}": {
+      "schema": "Vote",
+      "description": "Votes to bench team members"
+    }
+  }
+}
